@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS auditoria (
     id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL REFERENCES perfis(id) ON DELETE SET NULL,
+    user_id UUID NOT NULL REFERENCES perfis(id) ON DELETE SET NULL,
     empresa_id BIGINT REFERENCES empresas(id) ON DELETE SET NULL, -- NULL para ações master
     acao VARCHAR(100) NOT NULL, -- Ex: 'create_member', 'update_plan', 'delete_agent'
     entidade_tipo VARCHAR(50) NOT NULL, -- Ex: 'perfil', 'empresa', 'agente_ia'
@@ -31,4 +31,3 @@ COMMENT ON COLUMN auditoria.empresa_id IS 'ID da empresa (NULL para ações de u
 COMMENT ON COLUMN auditoria.acao IS 'Tipo de ação executada (ex: create_member, update_plan)';
 COMMENT ON COLUMN auditoria.entidade_tipo IS 'Tipo da entidade afetada (ex: perfil, empresa, agente_ia)';
 COMMENT ON COLUMN auditoria.detalhes IS 'Dados adicionais da ação em formato JSON';
-

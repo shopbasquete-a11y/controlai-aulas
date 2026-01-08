@@ -2,7 +2,7 @@
 -- Descrição: Armazena perfis de usuários vinculados a empresas e ao Supabase Auth
 
 CREATE TABLE IF NOT EXISTS perfis (
-    id BIGINT PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
     empresa_id BIGINT NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
     role role_type NOT NULL DEFAULT 'user',
     email VARCHAR(255) NOT NULL,
@@ -48,4 +48,3 @@ COMMENT ON TABLE perfis IS 'Perfis de colaboradores vinculados a empresas e auth
 COMMENT ON COLUMN perfis.id IS 'FK para auth.users.id (mesmo ID do usuário autenticado)';
 COMMENT ON COLUMN perfis.empresa_id IS 'FK para empresas - ESSENCIAL para RLS e isolamento multi-tenant';
 COMMENT ON COLUMN perfis.role IS 'Role do usuário: master, admin ou user';
-

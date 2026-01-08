@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS agentes_ia (
     is_active BOOLEAN DEFAULT true,
     is_popular BOOLEAN DEFAULT false, -- Destaque para agentes populares
     cor VARCHAR(7), -- Código hexadecimal da cor
-    created_by BIGINT REFERENCES perfis(id) ON DELETE SET NULL,
+    created_by UUID REFERENCES perfis(id) ON DELETE SET NULL,
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -32,4 +32,3 @@ CREATE TRIGGER update_agentes_ia_updated_at
 COMMENT ON TABLE agentes_ia IS 'Agentes IA customizados criados pelas empresas';
 COMMENT ON COLUMN agentes_ia.instrucoes IS 'System prompt específico do agente (sobrescreve contexto_ia da empresa se necessário)';
 COMMENT ON COLUMN agentes_ia.is_popular IS 'Flag para destacar agentes populares na interface';
-

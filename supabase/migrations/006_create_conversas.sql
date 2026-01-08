@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS conversas (
     id BIGSERIAL PRIMARY KEY,
     conversation_uuid UUID NOT NULL UNIQUE DEFAULT gen_random_uuid(),
     empresa_id BIGINT NOT NULL REFERENCES empresas(id) ON DELETE CASCADE,
-    user_id BIGINT NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES perfis(id) ON DELETE CASCADE,
     agente_id BIGINT NOT NULL REFERENCES agentes_ia(id) ON DELETE RESTRICT,
     titulo VARCHAR(255), -- Título gerado automaticamente ou pelo usuário
     mensagens JSONB DEFAULT '[]'::jsonb, -- Array de mensagens [{role, content, timestamp}]
@@ -38,4 +38,3 @@ COMMENT ON TABLE conversas IS 'Histórico de conversas entre usuários e agentes
 COMMENT ON COLUMN conversas.conversation_uuid IS 'UUID único para rastreamento da conversa';
 COMMENT ON COLUMN conversas.mensagens IS 'Array JSON com histórico de mensagens: [{role: "user"|"assistant", content: string, timestamp: string}]';
 COMMENT ON COLUMN conversas.tokens_usados IS 'Total de tokens consumidos nesta conversa';
-
