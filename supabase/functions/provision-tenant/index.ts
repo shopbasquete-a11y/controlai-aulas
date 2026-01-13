@@ -144,10 +144,11 @@ serve(async (req) => {
     }
 
     // 8. Criar perfil com role 'admin'
+    // Nota: user.id é UUID (string), que corresponde ao tipo UUID da tabela perfis.id
     const { data: perfil, error: perfilError } = await supabase
       .from("perfis")
       .insert({
-        id: BigInt(user.id),
+        id: user.id, // UUID do usuário autenticado
         empresa_id: empresa.id,
         role: "admin",
         email: user.email!,

@@ -46,6 +46,7 @@ export default function Register() {
       );
 
       if (authError) {
+        console.error("Erro ao criar usuário:", authError);
         toast.error("Erro ao criar conta", {
           description: authError.message,
         });
@@ -59,34 +60,94 @@ export default function Register() {
         return;
       }
 
-      // 2. Provisionar tenant via Edge Function
-      const { data: provisionData, error: provisionError } = await fetch(
+      // 2. Verificar se precisa confirmar email
+      // Se não houver sessão, pode ser que o email precise ser confirmado
+      if (!session) {
+        toast.info("Verifique seu email", {
+          description: "Enviamos um link de confirmação. Após confirmar, faça login para continuar.",
+        });
+        navigate("/auth/login");
+        return;
+      }
+
+      // 3. Provisionar tenant via Edge Function
+      if (!session.access_token) {
+        toast.error("Erro ao criar conta", {
+          description: "Token de acesso não disponível",
+        });
+        return;
+      }
+
+      console.log("Chamando Edge Function provision-tenant...");
+      const provisionResponse = await fetch(
         `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/provision-tenant`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${session?.access_token || ""}`,
+            Authorization: `Bearer ${session.access_token}`,
           },
           body: JSON.stringify({
             nome_empresa: data.company,
             nome_completo: data.name,
           }),
         }
-      ).then((res) => res.json());
+      );
 
-      if (provisionError) {
+      // Verificar se a resposta é JSON válido
+      let provisionData;
+      const contentType = provisionResponse.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        provisionData = await provisionResponse.json();
+      } else {
+        const text = await provisionResponse.text();
+        console.error("Resposta não é JSON:", text);
         toast.error("Erro ao criar empresa", {
-          description: provisionError.message || "Tente fazer login novamente",
+          description: `Erro inesperado: ${provisionResponse.status} ${provisionResponse.statusText}`,
+        });
+        navigate("/auth/login");
+        return;
+      }
+
+      console.log("Resposta da Edge Function:", provisionData);
+
+      if (!provisionResponse.ok) {
+        console.error("Erro ao provisionar tenant:", provisionData);
+        const errorMessage = provisionData.error || provisionData.details || `Erro ${provisionResponse.status}`;
+        toast.error("Erro ao criar empresa", {
+          description: errorMessage,
         });
         // Usuário foi criado, mas empresa não. Pode fazer login e tentar novamente.
         navigate("/auth/login");
         return;
       }
 
+      if (provisionData.error) {
+        console.error("Erro na resposta:", provisionData);
+        toast.error("Erro ao criar empresa", {
+          description: provisionData.error || provisionData.details || "Erro desconhecido",
+        });
+        navigate("/auth/login");
+        return;
+      }
+
+      if (!provisionData.success) {
+        toast.error("Erro ao criar empresa", {
+          description: "Não foi possível criar a empresa. Tente fazer login novamente.",
+        });
+        navigate("/auth/login");
+        return;
+      }
+
+      console.log("Tenant provisionado com sucesso:", provisionData);
       toast.success("Conta criada com sucesso!");
+      
+      // Aguardar um pouco para garantir que os dados foram salvos
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
       navigate("/dashboard");
     } catch (error) {
+      console.error("Erro inesperado no registro:", error);
       toast.error("Erro inesperado", {
         description: error instanceof Error ? error.message : "Tente novamente mais tarde",
       });
